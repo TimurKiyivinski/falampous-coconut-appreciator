@@ -1,0 +1,3 @@
+[submodule "stockings"]
+	path = stockings
+	url = git@github.com:TimurKiyivinski/python-stockings.git

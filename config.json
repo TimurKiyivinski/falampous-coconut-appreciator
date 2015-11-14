@@ -1,0 +1,65 @@
+{
+    "board": {
+        "width": "8",
+        "height": "8"
+    },
+    "tokens": [
+        {
+            "name": "Pikeman",
+            "token": "P",
+            "count": "1",
+            "hit": [
+                {
+                    "name": "Pikeman",
+                    "value": "0.5"
+                },
+                {
+                    "name": "Archer",
+                    "value": "0.35"
+                },
+                {
+                    "name": "Cavalry",
+                    "value": "0.65"
+                }
+            ]
+        },
+        {
+            "name": "Archer",
+            "token": "A",
+            "count": "1",
+            "hit": [
+                {
+                    "name": "Pikeman",
+                    "value": "0.65"
+                },
+                {
+                    "name": "Archer",
+                    "value": "0.5"
+                },
+                {
+                    "name": "Cavalry",
+                    "value": "0.35"
+                }
+            ]
+        },
+        {
+            "name": "Cavalry",
+            "token": "C",
+            "count": "1",
+            "hit": [
+                {
+                    "name": "Pikeman",
+                    "value": "0.35"
+                },
+                {
+                    "name": "Archer",
+                    "value": "0.65"
+                },
+                {
+                    "name": "Cavalry",
+                    "value": "0.5"
+                }
+            ]
+        }
+    ]
+}
