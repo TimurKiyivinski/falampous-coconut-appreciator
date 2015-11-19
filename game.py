@@ -1,6 +1,7 @@
 from stockings import stockings
 import pickle, random, string, datetime
 from multiprocessing import Process
+import sys
 
 class Token:
     def __init__(self, name = 'Null', token = 'N', attacks = {}):
@@ -41,14 +42,26 @@ class Player:
 class Input:
     def __init__(self):
         pass
+    def get(self):
+        pass
 
 class View:
     def __init__(self):
         pass
     def message(self, message):
+        print(message)
         pass
-    def board(self, board):
-        pass
+    def board(self, board, player):
+        for i in range(0, board.height):
+            for ii in range(0, board.width):
+                if (board.tokens[i][ii] == 0):
+                    print('.,', end='')
+                else:
+                    if board.tokens[i][ii].player.id == player.id:
+                        print("%s%s" % (board.tokens[i][ii].token, "+"), end='')
+                    else:
+                        print("%s%s" % (board.tokens[i][ii].token, "-"), end='')
+            print('\n', end='')
 
 class State:
     def __init__(self):
@@ -89,12 +102,11 @@ class GameState(State):
                 try:
                     print('Connecting client %i.' % (len(self.connections) + 1))
                     client = ClientState.clone(data)
-                    self.board.token(self.config['tokens'], client.player)
-                    client.board = self.board
                     self.connections.append(client)
                     if len(self.connections) == 2:
-                        print('Setting turn')
-                        client.turn = self.connections[0].player.id
+                        self.board.token(self.config['tokens'], self.connections[0].player)
+                        self.board.token(self.config['tokens'], client.player)
+                        client.board = self.board
                 except Exception as e:
                     print(e)
                 print('Returning connection.')
@@ -110,12 +122,6 @@ class GameState(State):
             print('Normal operation')
             try:
                 client = ClientState.clone(data)
-                if data.turn == self.connections[0].player.id:
-                    print('%s to %s' % (data.turn, self.connections[0].player.id))
-                    client.turn = self.connections[1].player.id
-                else:
-                    print('%s to %s' % (data.turn, self.connections[1].player.id))
-                    client.turn = self.connections[0].player.id
                 return pickle.dumps(client)
             except Exception as e:
                 print(e)
@@ -127,8 +133,11 @@ class ClientState(State):
         self.close = False
         self.over = False
         self.text = 'Hello'
-        self.turn = 0
+        self.board = []
         self.player = Player()
+    def setIO(self, user_view, user_input):
+        self.view = user_view
+        self.input = user_input
     def message(self, message = ''):
         """
         Send a plain ClientState for the purpose of sending a message.
@@ -140,7 +149,6 @@ class ClientState(State):
         clean.text = message
         clean.board = self.board
         clean.player = self.player
-        clean.turn = self.turn
         return clean
     def clone(data):
         """
@@ -155,7 +163,6 @@ class ClientState(State):
         clean.text = data.text
         clean.board = data.board
         clean.player = data.player
-        clean.turn = data.turn
         return clean
     def connect(self, server, port):
         print('Establishing client connection.')
@@ -177,12 +184,26 @@ class ClientState(State):
             return False
     def game(self, pickle_dump):
         data = pickle.loads(pickle_dump)
-        print('%s: %s says %s' % (str(datetime.datetime.utcnow()), data.player.id, data.text))
+        self.view.message('%s: %s says %s' % (str(datetime.datetime.utcnow()), data.player.id, data.text))
+        try:
+            if data.board != []:
+                self.board = data.board
+                self.view.board(data.board, self.player)
+        except Exception as e:
+            print(e)
+            return e
         try:
             if data.over:
                 print('Server overpopulated.')
                 return
             else:
-                self.client.send(pickle.dumps(self.message(self.player.id)))
+                print('Sending a message')
+                if data.board != []:
+                    print('User turn')
+                    sys.stdout.flush()
+                    self.input.get()
+                    self.client.send(pickle.dumps(self.message(self.player.id)))
+                else:
+                    print('Received an empty board')
         except Exception as e:
             print(e)
