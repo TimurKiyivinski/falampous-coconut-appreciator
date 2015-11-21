@@ -197,7 +197,6 @@ class ClientState(State):
                 print('Server overpopulated.')
                 return
             else:
-                print('Sending a message')
                 if data.board != []:
                     self.client.send(pickle.dumps(self.message(self.player.id)))
                 else:

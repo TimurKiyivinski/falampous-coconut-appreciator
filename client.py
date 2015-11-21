@@ -22,7 +22,6 @@ class View(BoxLayout):
         self.add_widget(self.btn)
         self.text = 'Bibimbap'
         self.connected = False
-        self.clock = Clock.schedule_interval(self.update, 1.0)
     def connect(self, *args, **kwargs):
         if self.connected:
             return False
@@ -32,17 +31,14 @@ class View(BoxLayout):
         self.client.connect('127.0.0.1', 4096)
         self.listener = Process(target=self.client.listen)
         self.listener.start()
-        print('Waiting 10 seconds to connect.')
-        time.sleep(10)
-        print('Connect.')
         self.connection = Process(target=self.client.start)
         self.connection.start()
-    def update(self, *args, **kwargs):
-        self.btn.text = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase) for i in range(32))
-    def message(self, message):
+    @mainthread
+    def message(self, *args, **kwargs):
         try:
-            #print(message)
-            self.text = str(message)
+            self.text = args[0]
+            self.btn.text = self.text
+            print(self.text)
         except Exception as e:
             print(e)
     def board(self, board, player):
