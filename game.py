@@ -199,9 +199,6 @@ class ClientState(State):
             else:
                 print('Sending a message')
                 if data.board != []:
-                    print('User turn')
-                    sys.stdout.flush()
-                    self.input.get()
                     self.client.send(pickle.dumps(self.message(self.player.id)))
                 else:
                     print('Received an empty board')

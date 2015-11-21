@@ -1,6 +1,6 @@
 #!/bin/env python3
 import game
-import argparse, time
+import argparse, time, string, random
 from multiprocessing import Process
 from kivy.app import App
 from kivy.uix.widget import Widget
@@ -9,6 +9,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.properties import StringProperty
+from kivy.clock import Clock, mainthread
 
 class Input():
     pass
@@ -16,47 +17,50 @@ class Input():
 class View(BoxLayout):
     def __init__(self, **kwargs):
         super(View, self).__init__(**kwargs)
-        self.btn = Button(text='Cat')
-        self.btn.bind(on_press=self.message)
+        self.btn = Button(text='Connect to Server')
+        self.btn.bind(on_press=self.connect)
         self.add_widget(self.btn)
+        self.text = 'Bibimbap'
+        self.connected = False
+        self.clock = Clock.schedule_interval(self.update, 1.0)
+    def connect(self, *args, **kwargs):
+        if self.connected:
+            return False
+        print('Connection button triggered.')
+        self.client = game.ClientState()
+        self.client.setIO(self, Input())
+        self.client.connect('127.0.0.1', 4096)
+        self.listener = Process(target=self.client.listen)
+        self.listener.start()
+        print('Waiting 10 seconds to connect.')
+        time.sleep(10)
+        print('Connect.')
+        self.connection = Process(target=self.client.start)
+        self.connection.start()
+    def update(self, *args, **kwargs):
+        self.btn.text = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase) for i in range(32))
     def message(self, message):
-        self.btn.text = 'Kivy totally sucks'
-        self.add_widget(Button(text=message))
         try:
-            self.btn.text = message
-            self.btn.canvas.ask_update()
+            #print(message)
+            self.text = str(message)
         except Exception as e:
             print(e)
     def board(self, board, player):
-        for i in tokens:
-            for ii in range(int(i['count'])):
-                token = Token(i['name'], i['token'], i['hit'])
-                token.player(player)
-                x, y = self.rand()
-                while not self.tokens[x][y] == 0:
-                    x, y = self.rand()
-                self.tokens[x][y] = token
+        return
+        for i in range(0, board.height):
+            for ii in range(0, board.width):
+                if (board.tokens[i][ii] == 0):
+                    print('.,', end='')
+                else:
+                    if board.tokens[i][ii].player.id == player.id:
+                        print("%s%s" % (board.tokens[i][ii].token, "+"), end='')
+                    else:
+                        print("%s%s" % (board.tokens[i][ii].token, "-"), end='')
+            print('\n', end='')
 
 class ClientApp(App):
     def build(self):
         self.view = View()
-        run = True
-        if run:
-            self.client = game.ClientState()
-            self.client.setIO(self.view, Input())
-            self.client.connect(args.server, args.port)
-            self.listener = Process(target=self.client.listen)
-            self.listener.start()
-            print('Waiting 10 seconds to connect.')
-            time.sleep(10)
-            print('Connect.')
-            self.connection = Process(target=self.client.start)
-            self.connection.start()
-        else:
-            self.view.message('1')
-            self.view.message('2')
-            self.view.message('3')
-            pass
         return self.view
     def join(self):
         self.listener.join()
