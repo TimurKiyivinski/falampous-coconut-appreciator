@@ -33,12 +33,15 @@ class View(BoxLayout):
         self.listener.start()
         self.connection = Process(target=self.client.start)
         self.connection.start()
+        self.connected = True
     @mainthread
+    def update(self, *args, **kwargs):
+        print(args[0])
+        self.btn.text = args[0]
     def message(self, *args, **kwargs):
+        self.update(args[0])
         try:
             self.text = args[0]
-            self.btn.text = self.text
-            print(self.text)
         except Exception as e:
             print(e)
     def board(self, board, player):
