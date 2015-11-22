@@ -2,73 +2,59 @@
 import game
 import argparse, time, string, random
 from multiprocessing import Process
-from kivy.app import App
-from kivy.uix.widget import Widget
-from kivy.uix.button import Button
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.textinput import TextInput
-from kivy.uix.label import Label
-from kivy.properties import StringProperty
-from kivy.clock import Clock, mainthread
 
 class Input():
-    pass
+    def __init__(self):
+        pass
+    def get(self):
+        return input()
 
-class View(BoxLayout):
-    def __init__(self, **kwargs):
-        super(View, self).__init__(**kwargs)
-        self.btn = Button(text='Connect to Server')
-        self.btn.bind(on_press=self.connect)
-        self.add_widget(self.btn)
-        self.text = 'Bibimbap'
-        self.connected = False
-    def connect(self, *args, **kwargs):
-        if self.connected:
-            return False
-        print('Connection button triggered.')
-        self.client = game.ClientState()
-        self.client.setIO(self, Input())
-        self.client.connect('127.0.0.1', 4096)
-        self.listener = Process(target=self.client.listen)
-        self.listener.start()
-        self.connection = Process(target=self.client.start)
-        self.connection.start()
-        self.connected = True
-    @mainthread
-    def update(self, *args, **kwargs):
-        print(args[0])
-        self.btn.text = args[0]
-    def message(self, *args, **kwargs):
-        self.update(args[0])
+class View():
+    def __init__(self):
+        pass
+    def message(self, text):
         try:
-            self.text = args[0]
+            print(text)
         except Exception as e:
             print(e)
     def board(self, board, player):
-        return
         for i in range(0, board.height):
+            print("X %i\t:" % i, end='')
             for ii in range(0, board.width):
                 if (board.tokens[i][ii] == 0):
-                    print('.,', end='')
+                    print(" %i .," % ii, end='')
                 else:
                     if board.tokens[i][ii].player.id == player.id:
-                        print("%s%s" % (board.tokens[i][ii].token, "+"), end='')
+                        print(" %i %s%s" % (ii, board.tokens[i][ii].token, "+"), end='')
                     else:
-                        print("%s%s" % (board.tokens[i][ii].token, "-"), end='')
+                        print(" %i %s%s" % (ii, board.tokens[i][ii].token, "-"), end='')
             print('\n', end='')
 
-class ClientApp(App):
-    def build(self):
-        self.view = View()
-        return self.view
-    def join(self):
-        self.listener.join()
-        self.connection.join()
+def main(args):
+    # Create View and Input classes
+    user_view = View()
+    user_input = Input()
+    # ClientState
+    client = game.ClientState()
+    client.setIO(user_view, user_input)
+    # Server connection and listener
+    if not args.debug:
+        client.connect(args.server, args.port)
+        #listener = Process(target=client.listen)
+        #listener.start()
+        connection = Process(target=client.start)
+        connection.start()
+        client.listen()
+    else:
+        user_view.message('User input:')
+        text = user_input.get()
+        user_view.message("> %s" % text)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Medieval Battle Chess client application.')
     parser.add_argument('-s', '--server', help='Server IP', default='127.0.0.1', required=False)
     parser.add_argument('-p', '--port', help='Server Port', default='4096', required=False)
     parser.add_argument('-v', '--verbose', help='Verbose logging', action='store_true')
+    parser.add_argument('-d', '--debug', help='Enable debugging', action='store_true')
     args = parser.parse_args()
-    ClientApp().run()
+    main(args)
