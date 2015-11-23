@@ -35,6 +35,14 @@ class Board:
             to_x, to_y = destination.split()
             from_x, from_y = int(from_x), int(from_y)
             to_x, to_y = int(to_x), int(to_y)
+            # Movement can't be to the same place
+            if to_x == from_x and to_y == from_y:
+                return False
+            # Movement can only be one step or 0
+            if abs(to_x - from_x) not in [0, 1]:
+                return False
+            if abs(to_y - from_y)  not in [0, 1]:
+                return False
         except Exception as e:
             return False
         # Invalid: Cannot move from 0
@@ -251,6 +259,11 @@ class ClientState(State):
             self.view.message("Token to [X Y]:")
             destination = self.input.get()
             complete = self.board.move(origin, destination, self.player)
+            if self.board.count(self.player) == 0:
+                self.view.message('You lose!')
+                self.client.send(pickle.dumps(self.message('Lost')))
+                self.client.close()
+                return False
             if complete:
                 self.view.message('Valid move')
                 self.view.board(self.board, self.player)
